@@ -47,12 +47,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Console.cs" />
+    <Compile Include="Converter.cs" />
+    <Compile Include="FileManager.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Operator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
