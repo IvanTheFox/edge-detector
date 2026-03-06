@@ -12,67 +12,88 @@ namespace EdgeDetector
 {
     public partial class Form1 : Form
     {
-        string imagePath = "";
+        Bitmap image = null;
         Bitmap edgeMap = null;
 
         public Form1()
         {
             InitializeComponent();
-            Console.Init(ConsoleOutputBox);
+
+            LaplacianOperatorPanel.Location = GradientOperatorPanel.Location;
+            GradientOperatorPanel.Visible = true;
+            LaplacianOperatorPanel.Visible = false;
+
+            foreach (var kernelId in Enum.GetValues(typeof(Kernel.Kernels)))
+                GradientKernelSelection.Items.Add(kernelId.ToString());
+            GradientKernelSelection.Text = Kernel.Kernels.Roberts.ToString();
         }
 
         private void SelectImageButton_Click(object sender, EventArgs e)
         {
-            Console.Print("User is selecting an image...");
             if (OpenImageDialog.InitialDirectory == "")
                 OpenImageDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
             if (OpenImageDialog.ShowDialog() == DialogResult.OK)
             {
-                imagePath = OpenImageDialog.FileName;
-                Console.Print($"User chose image <{imagePath}>");
+                image?.Dispose();
+                edgeMap?.Dispose();
+                image = FileManager.ImagePathToBitmap(OpenImageDialog.FileName);
+                ImageDisplay.Image = image;
+                EdgeMapDisplay.Image = null;
             }
         }
 
         private void SaveImageButton_Click(object sender, EventArgs e)
         {
-            Console.Print("User is saving the edge map...");
             if (edgeMap == null)
-            {
-                Console.Print("No edge map to save!");
                 return;
-            }
             if (SaveImageDialog.InitialDirectory == "")
                 SaveImageDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
             if (SaveImageDialog.ShowDialog() == DialogResult.OK)
             {
                 string fileName = SaveImageDialog.FileName;
                 FileManager.BitmapToPath(edgeMap, fileName);
-                Console.Print($"User saved the image at <{fileName}>");
             }
         }
 
         private void ConvertImageButton_Click(object sender, EventArgs e)
         {
-            if (imagePath == "")
+            if (image == null)
             {
-                Console.Print($"User has not selected an image file");
+                MessageBox.Show("No image has been selected for the conversion", "No image error");
                 return;
             }
-            Console.Print("Starting conversion process:");
 
-            Console.Print("\tReading image file to Bitmap...");
-            Bitmap image = FileManager.ImagePathToBitmap(imagePath);
-
-            Console.Print("\tConverting image to edge map...");
-            if (edgeMap != null)
+            if (OperatorOption1.Checked)
             {
-                edgeMap.Dispose();
-                edgeMap = null;
-            }
-            edgeMap = Converter.GetEdgeMap(image, Kernel.Sobel3x3, 40);
-            image.Dispose();
+                string kernelName = GradientKernelSelection.Text;
 
-            ImageDisplayBox.Image = edgeMap;
+                if (!Enum.TryParse<Kernel.Kernels>(kernelName, true, out Kernel.Kernels kernelId))
+                {
+                    MessageBox.Show($"Unkwon kernel \"{kernelName}\"", "Input error");
+                    return;
+                }
+                Kernel krnl = new Kernel(kernelId);
+
+                int? threshold = null;
+                if (ThresholdCheckBox.Checked)
+                    threshold = (int)ThresholdValueInput.Value;
+
+                edgeMap?.Dispose();
+                edgeMap = Converter.GetEdgeMap(image, krnl, threshold);
+            }
+            else
+            {
+                // TODO: code in the laplacian edge detection
+                return;
+            }
+
+            EdgeMapDisplay.Image = edgeMap;
+        }
+
+        private void OperatorOption1_CheckedChanged(object sender, EventArgs e)
+        {
+            GradientOperatorPanel.Visible = OperatorOption1.Checked;
+            LaplacianOperatorPanel.Visible = OperatorOption2.Checked;
         }
     }
 }
