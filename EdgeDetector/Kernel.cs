@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace EdgeDetector
 {
-    internal struct Operator
+    internal struct Kernel
     {
-        public string name;
-        public double[,] X;
-        public double[,] Y;
+        public string Name { get; }
+        public int Size { get;  }
+        public double[,] X { get; }
+        public double[,] Y { get; }
 
-        public enum Operators
+        public enum Kernels
         {
             Roberts = 1,
             Prewitt = 2,
@@ -20,33 +21,33 @@ namespace EdgeDetector
             Sobel5x5 = 4
         }
 
-        public Operator(Operators op)
+        public Kernel(Kernels op)
         {
             switch (op)
             {
-                case Operators.Roberts:
-                    this.name = "Roberts";
-                    this.X = new double[2, 2]
+                case Kernels.Roberts:
+                    Name = "Roberts";
+                    X = new double[2, 2]
                     {
                         { 0, 1 },
                         { -1, 0 }
                     };
-                    this.Y = new double[2, 2]
+                    Y = new double[2, 2]
                     {
                         { 1, 0 },
                         { 0, -1 }
                     };
                     break;
 
-                case Operators.Prewitt:
-                    this.name = "Prewitt";
-                    this.X = new double[3, 3]
+                case Kernels.Prewitt:
+                    Name = "Prewitt";
+                    X = new double[3, 3]
                     {
                         { -1, 0, 1 },
                         { -1, 0, 1 },
                         { -1, 0, 1 }
                     };
-                    this.Y = new double[3, 3]
+                    Y = new double[3, 3]
                     {
                         { 1, 1, 1 },
                         { 0, 0, 0 },
@@ -54,15 +55,15 @@ namespace EdgeDetector
                     };
                     break;
 
-                case Operators.Sobel3x3:
-                    this.name = "Sobel3x3";
-                    this.X = new double[3, 3]
+                case Kernels.Sobel3x3:
+                    Name = "Sobel3x3";
+                    X = new double[3, 3]
                     {
                         { -1, 0, 1 },
                         { -2, 0, 2 },
                         { -1, 0, 1 }
                     };
-                    this.Y = new double[3, 3]
+                    Y = new double[3, 3] 
                     {
                         { 1, 2, 1 },
                         { 0, 0, 0 },
@@ -70,9 +71,9 @@ namespace EdgeDetector
                     };
                     break;
 
-                case Operators.Sobel5x5:
-                    this.name = "Sobel5x5";
-                    this.X = new double[5, 5]
+                case Kernels.Sobel5x5:
+                    Name = "Sobel5x5";
+                    X = new double[5, 5]
                     {
                         { -1, -2, 0, 2, 1 },
                         { -2, -3, 0, 3, 2 },
@@ -80,7 +81,7 @@ namespace EdgeDetector
                         { -2, -3, 0, 3, 2 },
                         { -1, -2, 0, 2, 1 }
                     };
-                    this.Y = new double[5, 5]
+                    Y = new double[5, 5]
                     {
                         { 1, 2, 3, 2, 1 },
                         { 2, 3, 5, 3, 2 },
@@ -91,19 +92,20 @@ namespace EdgeDetector
                     break;
 
                 default:
-                    this.name = "Roberts";
-                    this.X = new double[2, 2]
+                    Name = "Roberts";
+                    X = new double[2, 2]
                     {
                         { 0, 1 },
                         { -1, 0 }
                     };
-                    this.Y = new double[2, 2]
+                    Y = new double[2, 2]
                     {
                         { 1, 0 },
                         { 0, -1 }
                     };
                     break;
             }
+            Size = X.GetLength(0);
         }
     }
 }

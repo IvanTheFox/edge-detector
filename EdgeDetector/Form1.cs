@@ -69,7 +69,7 @@ namespace EdgeDetector
                 edgeMap.Dispose();
                 edgeMap = null;
             }
-            edgeMap = Converter.GetEdgeMap(image, new Operator(Operator.Operators.Prewitt));
+            edgeMap = Converter.GetEdgeMap(image, new Kernel(Kernel.Kernels.Prewitt));
             image.Dispose();
 
             ImageDisplayBox.Image = edgeMap;

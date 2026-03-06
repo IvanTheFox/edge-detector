@@ -4,62 +4,39 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace EdgeDetector
 {
     internal class Converter
     {
         const int channelSize = 255;
-
-        public class ConvolutionError : Exception
-        {
-            public ConvolutionError()
-                : base("There was a mismatch between inner and outer matrix sizes for the provided arrays")
-            { }
-            public ConvolutionError(string message)
-                : base(message)
-            { }
-        }
         
-        public static Bitmap GetEdgeMap(Bitmap image, Operator op)
-        {            
-            (int[,], int[,], int[,]) result = SplitByChannels(image);
-            double[,] red = Int2DArrayToDouble(result.Item1);
-            double[,] green = Int2DArrayToDouble(result.Item2);
-            double[,] blue = Int2DArrayToDouble(result.Item3);
+        public static Bitmap GetEdgeMap(Bitmap image, Kernel krnl)
+        {
+            var result = SplitByChannels(image);
 
-            double[,] redX = Convolve(red, op.X);
-            double[,] redY = Convolve(red, op.Y);
+            double[,] red = TransformMatrix<int, double>(result.Item1, (x, y, value) => (double)value);
+            double[,] redX = Convolve(red, krnl.X);
+            double[,] redY = Convolve(red, krnl.Y);
 
-            double[,] greenX = Convolve(green, op.X);
-            double[,] greenY = Convolve(green, op.Y);
+            double[,] green = TransformMatrix<int, double>(result.Item2, (x, y, value) => (double)value);
+            double[,] greenX = Convolve(green, krnl.X);
+            double[,] greenY = Convolve(green, krnl.Y);
 
-            double[,] blueX = Convolve(blue, op.X);
-            double[,] blueY = Convolve(blue, op.Y);
+            double[,] blue = TransformMatrix<int, double>(result.Item3, (x, y, value) => (double)value);
+            double[,] blueX = Convolve(blue, krnl.X);
+            double[,] blueY = Convolve(blue, krnl.Y);
 
-            int mapWidth = redX.GetLength(0);
-            int mapHeight = redX.GetLength(1);
-
-            double[,] dx = new double[mapWidth, mapHeight];
-            double[,] dy = new double[mapWidth, mapHeight];
-            double[,] magnitude = new double[mapWidth, mapHeight];
-
-            for (int x =  0; x < mapWidth; x++)
+            double[,] magnitude = new double[redX.GetLength(0), redX.GetLength(1)];
+            ApplyToMatrix<double>(magnitude, (x, y, value) =>
             {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    dx[x, y] = Math.Abs(redX[x, y]) + Math.Abs(greenX[x, y]) + Math.Abs(blueX[x, y]);
-                    dy[x, y] = Math.Abs(redY[x, y]) + Math.Abs(greenY[x, y]) + Math.Abs(blueY[x, y]);
-                    magnitude[x, y] = Math.Sqrt(dx[x, y] * dx[x, y] + dy[x, y] * dy[x, y]);
-                }
-            }
+                double dx = Math.Abs(redX[x, y]) + Math.Abs(greenX[x, y]) + Math.Abs(blueX[x, y]);
+                double dy = Math.Abs(redY[x, y]) + Math.Abs(greenY[x, y]) + Math.Abs(blueY[x, y]);
+                return Math.Sqrt(dx * dx + dy * dy);
+            });
 
-            double maxValue = 0;
-            for (int x = 0; x < mapWidth; x++)
-                for (int y = mapHeight; y < mapHeight; y++)
-                    if (maxValue < magnitude[x, y])
-                        maxValue = magnitude[x, y];
-            Bitmap edgeMap = Double2DArrayToBitmap(magnitude);
+            Bitmap edgeMap = MatrixToBitmap(magnitude, 0, GetMaxMagnitude(3, krnl));
 
             return edgeMap;
         }
@@ -104,65 +81,109 @@ namespace EdgeDetector
             return (red, green, blue);
         }
 
-        private static double[,] Convolve(double[,] outer, double[,] inner)
+        private static double[,] Convolve(double[,] m1, double[,] m2)
         {
-            int outerWidth = outer.GetLength(0);
-            int outerHeight = outer.GetLength(1);
-            int innerWidth = inner.GetLength(0);
-            int innerHeight = inner.GetLength(1);
-            if (outerWidth < innerWidth || outerHeight < innerHeight)
-                throw new ConvolutionError();
-            
-            int maxX = outerWidth - innerWidth;
-            int maxY = outerHeight - innerHeight;
-            double[,] result = new double[maxX + 1, maxY + 1];
+            int width1 = m1.GetLength(0);
+            int height1 = m1.GetLength(1);
+            int width2 = m2.GetLength(0);
+            int height2 = m2.GetLength(1);
 
-            for (int x = 0; x < maxX; x++)
-                for (int y = 0; y < maxY; y++)
+            int m1xMax = width1 + width2 - 1;
+            int m1yMax = height1 + height2 - 1;
+
+            double[,] result = new double[m1xMax, m1yMax];
+
+            for (int m1y = 0; m1y < m1yMax; m1y++)
+            {
+                for (int m1x = 0; m1x < m1xMax; m1x++)
                 {
-                    for (int x2 = 0; x2 < innerWidth; x2++)
-                        for (int y2 = 0; y2 < innerHeight; y2++)
-                            result[x, y] += outer[x + x2, y + y2] * inner[x2, y2];
-                    result[x, y] /= innerWidth;
+                    int m2xMax = width2 - Math.Max(0, m1x - width1 + 1);
+                    int m2yMax = height2 - Math.Max(0, m1y - height1 + 1);
+                    for (int m2y = -Math.Min(0, m1y - height2 + 1); m2y < m2yMax; m2y++)
+                    {
+                        for (int m2x = -Math.Min(0, m1x - width2 + 1); m2x < m2xMax; m2x++)
+                        {
+                            result[m1x, m1y] += m1[m1x - width2 + 1 + m2x, m1y - height2 + 1 + m2y] * m2[m2x, m2y];
+                        }
+                    }
                 }
+            }
 
             return result;
         }
 
-        private static double[,] Int2DArrayToDouble(int[,] array)
+        private static void ApplyToMatrix<T>(T[,] matrix, Func<int, int, T, T> operation)
         {
-            int width = array.GetLength(0);
-            int height = array.GetLength(1);
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
 
-            double[,] result = new double[width, height];
-            for (int x = 0; x <  width; x++)
+            for (int x = 0; x < width; x++)
                 for (int y = 0; y < height; y++)
-                    result[x, y] = array[x, y];
-
-            return result;
+                    matrix[x, y] = operation(x, y, matrix[x, y]);
         }
 
-        private static Bitmap Double2DArrayToBitmap(double[,] array)
+        private static T2[,] TransformMatrix<T1, T2>(T1[,] matrix, Func<int, int, T1, T2> operation)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+            T2[,] newMatrix = new T2[width, height];
+
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    newMatrix[x, y] = operation(x, y, matrix[x, y]);
+
+            return newMatrix;
+        }
+
+        private static void IterateOverMatrix<T>(T[,] matrix, Action<int, int, T> operation)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    operation(x, y, matrix[x, y]);
+        }
+
+        private static Bitmap MatrixToBitmap(double[,] array, double minValue, double maxValue)
         {
             int width = array.GetLength(0);
             int height = array.GetLength(1);
             Bitmap bitmap = new Bitmap(width, height);
 
-            double maxMagnitude = GetMaxMagnitude(3);
+            double diff = maxValue - minValue;
             for (int x = 0; x < width; x++)
                 for (int y = 0; y < height; y++)
                     bitmap.SetPixel(x, y, Color.FromArgb(
-                        (int)(array[x, y] / maxMagnitude * channelSize),
-                        (int)(array[x, y] / maxMagnitude * channelSize),
-                        (int)(array[x, y] / maxMagnitude * channelSize)
+                        (int)((array[x, y] - minValue) / diff * channelSize),
+                        (int)((array[x, y] - minValue) / diff * channelSize),
+                        (int)((array[x, y] - minValue) / diff * channelSize)
                     ));
 
             return bitmap;
         }
 
-        private static double GetMaxMagnitude(int channels)
+        private static double GetMaxMagnitude(int channels, Kernel krnl)
         {
-            return Math.Sqrt(2 * channels * channels * channelSize * channelSize);
+            double posXAmpl = 0, negXAmpl = 0, posYAmpl = 0, negYAmpl = 0;
+            IterateOverMatrix<double>(krnl.X, (x, y, value) =>
+            {
+                if (value > 0)
+                    posXAmpl += value;
+                else
+                    negXAmpl += value;
+            });
+            IterateOverMatrix<double>(krnl.Y, (x, y, value) =>
+            {
+                if (value > 0)
+                    posYAmpl += value;
+                else
+                    negYAmpl += value;
+            });
+
+            double maxDerivative = channelSize * Math.Max(Math.Max(posXAmpl, negXAmpl), Math.Max(posYAmpl, negYAmpl));
+
+            return Math.Sqrt(2 * maxDerivative * maxDerivative * channels * channels);
         }
     }
 }
