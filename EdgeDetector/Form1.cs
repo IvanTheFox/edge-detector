@@ -23,9 +23,9 @@ namespace EdgeDetector
             GradientOperatorPanel.Visible = true;
             LaplacianOperatorPanel.Visible = false;
 
-            foreach (var kernelId in Enum.GetValues(typeof(Kernel.Kernels)))
+            foreach (var kernelId in Enum.GetValues(typeof(Kernel2d.Kernels)))
                 GradientKernelSelection.Items.Add(kernelId.ToString());
-            GradientKernelSelection.Text = Kernel.Kernels.Roberts.ToString();
+            GradientKernelSelection.Text = Kernel2d.Kernels.Roberts.ToString();
         }
 
         private void SelectImageButton_Click(object sender, EventArgs e)
@@ -67,24 +67,24 @@ namespace EdgeDetector
             {
                 string kernelName = GradientKernelSelection.Text;
 
-                if (!Enum.TryParse<Kernel.Kernels>(kernelName, true, out Kernel.Kernels kernelId))
+                if (!Enum.TryParse<Kernel2d.Kernels>(kernelName, true, out Kernel2d.Kernels kernelId))
                 {
                     MessageBox.Show($"Unkwon kernel \"{kernelName}\"", "Input error");
                     return;
                 }
-                Kernel krnl = new Kernel(kernelId);
+                Kernel2d krnl = new Kernel2d(kernelId);
 
                 int? threshold = null;
                 if (ThresholdCheckBox.Checked)
                     threshold = (int)ThresholdValueInput.Value;
 
                 edgeMap?.Dispose();
-                edgeMap = Converter.GetEdgeMap(image, krnl, threshold);
+                edgeMap = Converter.ApplyKernel2d(image, krnl, threshold);
             }
             else
             {
-                // TODO: code in the laplacian edge detection
-                return;
+                edgeMap?.Dispose();
+                edgeMap = Converter.ApplyKernel(image, Kernel.Laplacian);
             }
 
             EdgeMapDisplay.Image = edgeMap;

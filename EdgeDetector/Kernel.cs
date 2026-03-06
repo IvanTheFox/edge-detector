@@ -6,11 +6,63 @@ using System.Threading.Tasks;
 
 namespace EdgeDetector
 {
-    internal struct Kernel
+    internal class Kernel
     {
-        public string Name { get; }
-        public int Size { get; }
-        public double[,] X { get; }
+        public string Name { get; protected set; }
+        public int Size { get; protected set; }
+        public double[,] X { get; protected set; }
+
+        public enum Kernels
+        {
+            Zeros = 1,
+            Laplacian = 2,
+            Blur3x3 = 3
+        }
+
+        public Kernel()
+        {
+            Name = "Zeros";
+            X = new double[,]
+            {
+                { 0, 0 },
+                { 0, 0 }
+            };
+            Size = X.GetLength(0);
+        }
+
+        public Kernel(string name, double[,] x)
+        {
+            Name = name;
+            X = x;
+            Size = x.GetLength(0);
+        }
+
+        public Kernel(Kernels krnl)
+        {
+            switch (krnl)
+            {
+                default:
+                    break;
+
+                case Kernels.Laplacian:
+                    Name = "Laplacian";
+                    X = new double[,]
+                    {
+                        { 1, 4, 1 },
+                        { 4, -20, 4 },
+                        { 1, 4, 1 }
+                    };
+                    break;
+            }
+        }
+
+        public static Kernel Zeros => new Kernel(Kernels.Zeros);
+        public static Kernel Laplacian => new Kernel(Kernels.Laplacian);
+        public static Kernel Blur3x3 => new Kernel(Kernels.Blur3x3);
+    }
+    
+    internal class Kernel2d : Kernel
+    {
         public double[,] Y { get; }
 
         public enum Kernels
@@ -21,16 +73,15 @@ namespace EdgeDetector
             Sobel5x5 = 4
         }
 
-        public static Kernel Roberts => new Kernel(Kernels.Roberts);
-        public static Kernel Prewitt => new Kernel(Kernels.Prewitt);
-        public static Kernel Sobel3x3 => new Kernel(Kernels.Sobel3x3);
-        public static Kernel Sobel5x5 => new Kernel(Kernels.Sobel5x5);
+        public Kernel2d(string name, double[,] x, double[,] y)
+            : base(name, x)
+        { Y = y; }
 
-        public Kernel(Kernels op)
+        public Kernel2d(Kernels krnl)
         {
-            switch (op)
+            switch (krnl)
             {
-                case Kernels.Roberts:
+                default:
                     Name = "Roberts";
                     X = new double[2, 2]
                     {
@@ -68,7 +119,7 @@ namespace EdgeDetector
                         { -2, 0, 2 },
                         { -1, 0, 1 }
                     };
-                    Y = new double[3, 3] 
+                    Y = new double[3, 3]
                     {
                         { 1, 2, 1 },
                         { 0, 0, 0 },
@@ -95,22 +146,13 @@ namespace EdgeDetector
                         { -1, -2, -3, -2, -1 }
                     };
                     break;
-
-                default:
-                    Name = "Roberts";
-                    X = new double[2, 2]
-                    {
-                        { 0, 1 },
-                        { -1, 0 }
-                    };
-                    Y = new double[2, 2]
-                    {
-                        { 1, 0 },
-                        { 0, -1 }
-                    };
-                    break;
             }
             Size = X.GetLength(0);
         }
+
+        public static Kernel2d Roberts => new Kernel2d(Kernels.Roberts);
+        public static Kernel2d Prewitt => new Kernel2d(Kernels.Prewitt);
+        public static Kernel2d Sobel3x3 => new Kernel2d(Kernels.Sobel3x3);
+        public static Kernel2d Sobel5x5 => new Kernel2d(Kernels.Sobel5x5);
     }
 }

@@ -12,7 +12,7 @@ namespace EdgeDetector
     {
         const int channelSize = 255;
         
-        public static Bitmap GetEdgeMap(Bitmap image, Kernel krnl, int? threshold = null)
+        public static Bitmap ApplyKernel2d(Bitmap image, Kernel2d krnl, int? threshold = null)
         {
             var result = SplitByChannels(image);
 
@@ -39,6 +39,28 @@ namespace EdgeDetector
             Bitmap edgeMap = MatrixToBitmap(magnitude, 0, GetMaxMagnitude(3, krnl));
             if (threshold.HasValue)
                 ApplyThresholding(edgeMap, threshold.Value);
+
+            return edgeMap;
+        }
+
+        public static Bitmap ApplyKernel(Bitmap image, Kernel krnl)
+        {
+            var result = SplitByChannels(image);
+
+            double[,] red = TransformMatrix<int, double>(result.Item1, (x, y, value) => (double)value);
+            red = Convolve(red, krnl.X);
+
+            double[,] green = TransformMatrix<int, double>(result.Item2, (x, y, value) => (double)value);
+            green = Convolve(green, krnl.X);
+
+            double[,] blue = TransformMatrix<int, double>(result.Item3, (x, y, value) => (double)value);
+            blue = Convolve(blue, krnl.X);
+
+            double[,] d2 = new double[red.GetLength(0), red.GetLength(1)];
+            ApplyToMatrix<double>(d2, (x, y, value) => red[x, y] + green[x, y] + blue[x, y]);
+
+            var interval = GetValueInterval(3, krnl);
+            Bitmap edgeMap = MatrixToBitmap(d2, interval.Item1, interval.Item2);
 
             return edgeMap;
         }
@@ -165,7 +187,7 @@ namespace EdgeDetector
             return bitmap;
         }
 
-        private static double GetMaxMagnitude(int channels, Kernel krnl)
+        private static double GetMaxMagnitude(int channels, Kernel2d krnl)
         {
             double posXAmpl = 0, negXAmpl = 0, posYAmpl = 0, negYAmpl = 0;
             IterateOverMatrix<double>(krnl.X, (x, y, value) =>
@@ -186,6 +208,20 @@ namespace EdgeDetector
             double maxDerivative = channelSize * Math.Max(Math.Max(posXAmpl, negXAmpl), Math.Max(posYAmpl, negYAmpl));
 
             return Math.Sqrt(2 * maxDerivative * maxDerivative * channels * channels);
+        }
+
+        private static (double, double) GetValueInterval(int channels, Kernel krnl)
+        {
+            double posValue = 0, negValue = 0;
+            IterateOverMatrix<double>(krnl.X, (x, y, value) =>
+            {
+                if (value > 0)
+                    posValue += value;
+                else
+                    negValue += value;
+            });
+
+            return (negValue * channels * channelSize, posValue * channels * channelSize);
         }
     }
 }
