@@ -9,7 +9,7 @@ namespace EdgeDetector
     internal struct Kernel
     {
         public string Name { get; }
-        public int Size { get;  }
+        public int Size { get; }
         public double[,] X { get; }
         public double[,] Y { get; }
 
@@ -20,6 +20,11 @@ namespace EdgeDetector
             Sobel3x3 = 3,
             Sobel5x5 = 4
         }
+
+        public static Kernel Roberts => new Kernel(Kernels.Roberts);
+        public static Kernel Prewitt => new Kernel(Kernels.Prewitt);
+        public static Kernel Sobel3x3 => new Kernel(Kernels.Sobel3x3);
+        public static Kernel Sobel5x5 => new Kernel(Kernels.Sobel5x5);
 
         public Kernel(Kernels op)
         {

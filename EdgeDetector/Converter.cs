@@ -12,7 +12,7 @@ namespace EdgeDetector
     {
         const int channelSize = 255;
         
-        public static Bitmap GetEdgeMap(Bitmap image, Kernel krnl)
+        public static Bitmap GetEdgeMap(Bitmap image, Kernel krnl, int? threshold = null)
         {
             var result = SplitByChannels(image);
 
@@ -37,6 +37,8 @@ namespace EdgeDetector
             });
 
             Bitmap edgeMap = MatrixToBitmap(magnitude, 0, GetMaxMagnitude(3, krnl));
+            if (threshold.HasValue)
+                ApplyThresholding(edgeMap, threshold.Value);
 
             return edgeMap;
         }
