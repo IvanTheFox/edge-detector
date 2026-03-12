@@ -96,9 +96,17 @@ namespace EdgeDetector
 
                 Kernel2d krnl = new Kernel2d(kernelId);
 
+                if (SmootheningCheckBox1.Checked)
+                {
+                    int deviation = (int)SmootheningInput1.Value;
+                    Kernel gaussian = Kernel.Gaussian(deviation);
+                    krnl.X = Converter.Convolve(krnl.X, gaussian.X);
+                    krnl.X = Converter.Convolve(krnl.Y, gaussian.X);
+                }
+
                 int? threshold = null;
-                if (ThresholdCheckBox.Checked)
-                    threshold = (int)ThresholdValueInput.Value;
+                if (ThresholdCheckBox1.Checked)
+                    threshold = (int)ThresholdValueInput1.Value;
 
                 conversionCall = () =>
                 {
@@ -108,12 +116,22 @@ namespace EdgeDetector
                 };
             }
             else
+            {
+                int? gaussianDeviation = null;
+                if (SmootheningCheckBox2.Checked)
+                    gaussianDeviation = (int)SmootheningInput2.Value;
+
+                int? threshold = null;
+                if (ThresholdCheckBox2.Checked)
+                    threshold = (int)ThresholdValueInput2.Value;
+
                 conversionCall = () =>
                 {
-                    _edgeMap = Converter.GetLaplacianEdgeMap(_image);
+                    _edgeMap = Converter.GetLaplacianEdgeMap(_image, threshold, gaussianDeviation);
                     EdgeMapDisplay.Image = _edgeMap;
                     _isConverting = false;
                 };
+            }
 
             // Starting the conversion
             _isConverting = true;

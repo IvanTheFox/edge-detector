@@ -77,9 +77,11 @@ namespace EdgeDetector
             return edgeMap;
         }
 
-        public static Bitmap GetLaplacianEdgeMap(Bitmap image)
-        {
+        public static Bitmap GetLaplacianEdgeMap(Bitmap image, int? threshold = null, int ? gaussianDeviation = null)
+        {   
             Kernel krnl = Kernel.Laplacian;
+            if (gaussianDeviation.HasValue)
+                krnl.X = Convolve(krnl.X, Kernel.Gaussian(gaussianDeviation.Value).X);
             
             // Splitting the image into 3 int matrices of red, green and blue values
             (int[,] redInt, int[,] greenInt, int[,] blueInt) = GetChannels(image);
@@ -99,19 +101,28 @@ namespace EdgeDetector
             double[,] d2 = Matrix.NewMatrix(red, (value, x, y) =>
                 value + green[x, y] + blue[x, y]);
 
-            // Mapping matrix values to channel size
-            (double minExtreme, double maxExtreme) = GetConvolutionExtremes(255, krnl.X);
-            Matrix.Map(d2, minExtreme * 3, maxExtreme * 3, 0, 255);
+            // Applying threshold and detecting zero crossings if needed
+            int[,] d2Int;
+            if (threshold.HasValue)
+            {
+                Matrix.ForEach(d2, (value, x, y) => d2[x, y] = (value > threshold.Value) ? CHANNEL_SIZE : 0);
+                d2Int = Matrix.NewMatrix(d2, (value, x, y) => (int)value);
+            }
+            else
+            {
+                (double minExtreme, double maxExtreme) = GetConvolutionExtremes(255, krnl.X);
+                Matrix.Map(d2, minExtreme * 3, maxExtreme * 3, 0, 255);
+                d2Int = Matrix.NewMatrix(d2, (value, x, y) => (int)value);
+            }
 
             // Converting matrix to Bitmap
-            int[,] d2Int = Matrix.NewMatrix(d2, (value, x, y) => (int)value);
             Bitmap edgeMap = MatrixToBitmap(d2Int);
 
             return edgeMap;
         }
 
         // Image operations
-        private static (int[,], int[,], int[,]) GetChannels(Bitmap map)
+        public static (int[,], int[,], int[,]) GetChannels(Bitmap map)
         {
             int width = map.Width;
             int height = map.Height;
@@ -134,7 +145,7 @@ namespace EdgeDetector
             return (red, green, blue);
         }
 
-        private static Bitmap MatrixToBitmap(int[,] matrix)
+        public static Bitmap MatrixToBitmap(int[,] matrix)
         {
             int width = matrix.GetLength(0);
             int height = matrix.GetLength(1);
@@ -147,7 +158,7 @@ namespace EdgeDetector
         }
 
         // Mathematical operations
-        private static double[,] Convolve(double[,] m1, double[,] m2)
+        public static double[,] Convolve(double[,] m1, double[,] m2)
         {
             int width1 = m1.GetLength(0);
             int height1 = m1.GetLength(1);
@@ -178,7 +189,7 @@ namespace EdgeDetector
             return result;
         }
 
-        private static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
+        public static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
         {
             double negativeSum = 0, positiveSum = 0, minAbsElement = matrix[0, 0];
             Matrix.ForEach(matrix, (value, x, y) =>
@@ -190,6 +201,42 @@ namespace EdgeDetector
             });
 
             return (maxValue * negativeSum, maxValue * positiveSum);
+        }
+
+        public static int[,] FindZeroCrossings(double[,] matrix, int threshold)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+
+            int[,] result = new int[width - 1, height - 1];
+            for (int y = 1; y < height - 1; y++)
+                for (int x = 1; x < width - 1; x++)
+                    if (matrix[x, y] > 0)
+                        result[x - 1, y - 1] = CHANNEL_SIZE;
+                    else
+                        result[x - 1, y - 1] = 0;
+
+            return result;
+        }
+
+        public static bool IsZeroCrossing(double[,] matrix, int threshold, int x, int y)
+        {
+            //bool pair1 = ((matrix[x - 1, y - 1] < 0) ^ (matrix[x + 1, y + 1] < 0)) && matrix[x - 1, y - 1] > threshold && matrix[x + 1, y + 1] > threshold;
+            //bool pair2 = ((matrix[x, y - 1] < 0) ^ (matrix[x, y + 1] < 0)) && matrix[x, y - 1] > threshold && matrix[x, y + 1] > threshold;
+            //bool pair3 = ((matrix[x + 1, y - 1] < 0) ^ (matrix[x - 1, y + 1] < 0)) && matrix[x + 1, y - 1] > threshold && matrix[x - 1, y + 1] > threshold;
+            //bool pair4 = ((matrix[x - 1, y] < 0) ^ (matrix[x + 1, y] < 0)) && matrix[x - 1, y] > threshold && matrix[x + 1, y] > threshold;
+
+            bool pair1t = matrix[x - 1, y - 1] > threshold && matrix[x + 1, y + 1] > threshold;
+            bool pair2t = matrix[x, y - 1] > threshold && matrix[x, y + 1] > threshold;
+            bool pair3t = matrix[x + 1, y - 1] > threshold && matrix[x - 1, y + 1] > threshold;
+            bool pair4t = matrix[x - 1, y] > threshold && matrix[x + 1, y] > threshold;
+
+            bool pair1s = ((matrix[x - 1, y - 1] < 0) ^ (matrix[x + 1, y + 1] < 0));
+            bool pair2s = ((matrix[x, y - 1] < 0) ^ (matrix[x, y + 1] < 0));
+            bool pair3s = ((matrix[x + 1, y - 1] < 0) ^ (matrix[x - 1, y + 1] < 0));
+            bool pair4s = ((matrix[x - 1, y] < 0) ^ (matrix[x + 1, y] < 0));
+
+            return (pair1t && pair1s) || (pair2t && pair2s) || (pair3t && pair3s) || (pair4t && pair4s);
         }
     }
 }

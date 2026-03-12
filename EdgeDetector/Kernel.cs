@@ -8,13 +8,13 @@ namespace EdgeDetector
 {
     internal class Kernel
     {
-        public string Name { get; protected set; }
-        public int Size { get; protected set; }
-        public double[,] X { get; protected set; }
+        public string Name { get; set; }
+        public int Size { get; set; }
+        public double[,] X { get; set; }
 
         public enum Kernels
         {
-            Laplacian = 1,
+            Laplacian = 1
         }
 
         public Kernel()
@@ -46,10 +46,11 @@ namespace EdgeDetector
                     Name = "Laplacian";
                     X = new double[,]
                     {
-                        { 1, 4, 1 },
-                        { 4, -20, 4 },
-                        { 1, 4, 1 }
+                        { 1, 1, 1 },
+                        { 1, -8, 1 },
+                        { 1, 1, 1 }
                     };
+                    Size = X.GetLength(0);
                     break;
             }
         }
@@ -72,7 +73,7 @@ namespace EdgeDetector
     
     internal class Kernel2d : Kernel
     {
-        public double[,] Y { get; }
+        public double[,] Y { get; set; }
 
         public enum Kernels
         {
