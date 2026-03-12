@@ -79,12 +79,12 @@ namespace EdgeDetector
                     threshold = (int)ThresholdValueInput.Value;
 
                 edgeMap?.Dispose();
-                edgeMap = Converter.ApplyKernel2d(image, krnl, threshold);
+                edgeMap = Converter.GetGradientEdgeMap(image, krnl, threshold);
             }
             else
             {
                 edgeMap?.Dispose();
-                edgeMap = Converter.ApplyKernel(image, Kernel.Laplacian);
+                edgeMap = Converter.GetLaplacianEdgeMap(image);
             }
 
             EdgeMapDisplay.Image = edgeMap;

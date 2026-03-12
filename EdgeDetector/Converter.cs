@@ -4,88 +4,117 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace EdgeDetector
 {
     internal class Converter
     {
-        const int channelSize = 255;
-        
-        public static Bitmap ApplyKernel2d(Bitmap image, Kernel2d krnl, int? threshold = null)
+        public const int CHANNEL_SIZE = 255;
+
+        // Edge map generators
+        public static Bitmap GetGradientEdgeMap(Bitmap image, Kernel2d krnl, int? threshold = null)
         {
-            var result = SplitByChannels(image);
+            // Splitting the image into 3 int matrices of red, green and blue values
+            (int[,] redInt, int[,] greenInt, int[,] blueInt) = GetChannels(image);
 
-            double[,] red = TransformMatrix<int, double>(result.Item1, (x, y, value) => (double)value);
-            double[,] redX = Convolve(red, krnl.X);
-            double[,] redY = Convolve(red, krnl.Y);
+            // Converting int matrices to double matrices
+            double[,] red = Matrix.NewMatrix(redInt,
+                (value, x, y) => (double)value);
+            double[,] green = Matrix.NewMatrix(greenInt,
+                (value, x, y) => (double)value);
+            double[,] blue = Matrix.NewMatrix(blueInt,
+                (value, x, y) => (double)value);
 
-            double[,] green = TransformMatrix<int, double>(result.Item2, (x, y, value) => (double)value);
-            double[,] greenX = Convolve(green, krnl.X);
-            double[,] greenY = Convolve(green, krnl.Y);
+            // Convolving channel matrices with X and Y variations of the kernel
+            double[,] redX = Matrix.NewMatrix(Convolve(red, krnl.X),
+                (value, x, y) => Math.Abs(value));
+            double[,] greenX = Matrix.NewMatrix(Convolve(green, krnl.X),
+                (value, x, y) => Math.Abs(value));
+            double[,] blueX = Matrix.NewMatrix(Convolve(blue, krnl.X),
+                (value, x, y) => Math.Abs(value));
 
-            double[,] blue = TransformMatrix<int, double>(result.Item3, (x, y, value) => (double)value);
-            double[,] blueX = Convolve(blue, krnl.X);
-            double[,] blueY = Convolve(blue, krnl.Y);
+            double[,] redY = Matrix.NewMatrix(Convolve(red, krnl.Y),
+                (value, x, y) => Math.Abs(value));
+            double[,] greenY = Matrix.NewMatrix(Convolve(green, krnl.Y),
+                (value, x, y) => Math.Abs(value));
+            double[,] blueY = Matrix.NewMatrix(Convolve(blue, krnl.Y),
+                (value, x, y) => Math.Abs(value));
 
-            double[,] magnitude = new double[redX.GetLength(0), redX.GetLength(1)];
-            ApplyToMatrix<double>(magnitude, (x, y, value) =>
-            {
-                double dx = Math.Abs(redX[x, y]) + Math.Abs(greenX[x, y]) + Math.Abs(blueX[x, y]);
-                double dy = Math.Abs(redY[x, y]) + Math.Abs(greenY[x, y]) + Math.Abs(blueY[x, y]);
-                return Math.Sqrt(dx * dx + dy * dy);
-            });
+            // Calculating magnitude of change
+            double[,] dx = Matrix.NewMatrix(redX,
+                (value, x, y) => value + greenX[x, y] + blueX[x, y]);
+            double[,] dy = Matrix.NewMatrix(redX,
+                (value, x, y) => value + greenX[x, y] + blueX[x, y]);
 
-            Bitmap edgeMap = MatrixToBitmap(magnitude, 0, GetMaxMagnitude(3, krnl));
+            double[,] magnitude = Matrix.NewMatrix(redX,
+                (value, x, y) => Math.Sqrt(dx[x, y] * dx[x, y] + dy[x, y] * dy[x, y]));
+
+            // Mapping values to color channel size
+            (double _, double maxDx) = GetConvolutionExtremes(255, krnl.X);
+            (double _, double maxDy) = GetConvolutionExtremes(255, krnl.Y);
+            double maxD = Math.Max(maxDx, maxDy);
+            double maxMagnitude = Math.Sqrt(2 * maxD * maxD * 3 * 3);
+
+            Matrix.Map(magnitude, 0, maxMagnitude, 0, 255);
+
+            // Applying threshold if neccessary
             if (threshold.HasValue)
-                ApplyThresholding(edgeMap, threshold.Value);
-
-            return edgeMap;
-        }
-
-        public static Bitmap ApplyKernel(Bitmap image, Kernel krnl)
-        {
-            var result = SplitByChannels(image);
-
-            double[,] red = TransformMatrix<int, double>(result.Item1, (x, y, value) => (double)value);
-            red = Convolve(red, krnl.X);
-
-            double[,] green = TransformMatrix<int, double>(result.Item2, (x, y, value) => (double)value);
-            green = Convolve(green, krnl.X);
-
-            double[,] blue = TransformMatrix<int, double>(result.Item3, (x, y, value) => (double)value);
-            blue = Convolve(blue, krnl.X);
-
-            double[,] d2 = new double[red.GetLength(0), red.GetLength(1)];
-            ApplyToMatrix<double>(d2, (x, y, value) => red[x, y] + green[x, y] + blue[x, y]);
-
-            var interval = GetValueInterval(3, krnl);
-            Bitmap edgeMap = MatrixToBitmap(d2, interval.Item1, interval.Item2);
-
-            return edgeMap;
-        }
-
-        public static void ApplyThresholding(Bitmap bitmap, int threshold)
-        {
-            int mapWidth = bitmap.Width;
-            int mapHeight = bitmap.Height;
-
-            for (int x = 0; x < mapWidth; x++)
             {
-                for (int y = 0; y < mapHeight; y++)
+                Matrix.ForEach(magnitude, (value, x, y) =>
                 {
-                    if (bitmap.GetPixel(x, y).R > threshold)
-                        bitmap.SetPixel(x, y, Color.White);
+                    if (value < threshold)
+                        magnitude[x, y] = 0;
                     else
-                        bitmap.SetPixel(x, y, Color.Black);
-                }
+                        magnitude[x, y] = 255;
+                });
             }
+
+            // Converting matrix to a Bitmap
+            int[,] magnitudeInt = Matrix.NewMatrix(magnitude, (value, x, y) => (int)value);
+            Bitmap edgeMap = MatrixToBitmap(magnitudeInt);
+
+            return edgeMap;
         }
 
-        private static (int[,], int[,], int[,]) SplitByChannels(Bitmap image)
+        public static Bitmap GetLaplacianEdgeMap(Bitmap image)
         {
-            int width = image.Width;
-            int height = image.Height;
+            Kernel krnl = Kernel.Laplacian;
+            
+            // Splitting the image into 3 int matrices of red, green and blue values
+            (int[,] redInt, int[,] greenInt, int[,] blueInt) = GetChannels(image);
+
+            // Converting int matrices to double matrices
+            double[,] red = Matrix.NewMatrix(redInt,
+                (value, x, y) => (double)value);
+            double[,] green = Matrix.NewMatrix(greenInt,
+                (value, x, y) => (double)value);
+            double[,] blue = Matrix.NewMatrix(blueInt,
+                (value, x, y) => (double)value);
+
+            // Calculating second derivative of the image using Laplacian kernel
+            red = Convolve(red, krnl.X);
+            green = Convolve(green, krnl.X);
+            blue = Convolve(blue, krnl.X);
+            double[,] d2 = Matrix.NewMatrix(red, (value, x, y) =>
+                value + green[x, y] + blue[x, y]);
+
+            // Mapping matrix values to channel size
+            (double minExtreme, double maxExtreme) = GetConvolutionExtremes(255, krnl.X);
+            Matrix.Map(d2, minExtreme * 3, maxExtreme * 3, 0, 255);
+
+            // Converting matrix to Bitmap
+            int[,] d2Int = Matrix.NewMatrix(d2, (value, x, y) => (int)value);
+            Bitmap edgeMap = MatrixToBitmap(d2Int);
+
+            return edgeMap;
+        }
+
+        // Image operations
+        private static (int[,], int[,], int[,]) GetChannels(Bitmap map)
+        {
+            int width = map.Width;
+            int height = map.Height;
 
             int[,] red = new int[width, height];
             int[,] green = new int[width, height];
@@ -95,7 +124,7 @@ namespace EdgeDetector
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Color pixel = image.GetPixel(x, y);
+                    Color pixel = map.GetPixel(x, y);
                     red[x, y] = pixel.R;
                     green[x, y] = pixel.G;
                     blue[x, y] = pixel.B;
@@ -105,6 +134,19 @@ namespace EdgeDetector
             return (red, green, blue);
         }
 
+        private static Bitmap MatrixToBitmap(int[,] matrix)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+            Bitmap bitmap = new Bitmap(width, height);
+
+            Matrix.ForEach(matrix, (value, x, y) =>
+                bitmap.SetPixel(x, y, Color.FromArgb(value, value, value)));
+
+            return bitmap;
+        }
+
+        // Mathematical operations
         private static double[,] Convolve(double[,] m1, double[,] m2)
         {
             int width1 = m1.GetLength(0);
@@ -136,92 +178,18 @@ namespace EdgeDetector
             return result;
         }
 
-        private static void ApplyToMatrix<T>(T[,] matrix, Func<int, int, T, T> operation)
+        private static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
         {
-            int width = matrix.GetLength(0);
-            int height = matrix.GetLength(1);
-
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    matrix[x, y] = operation(x, y, matrix[x, y]);
-        }
-
-        private static T2[,] TransformMatrix<T1, T2>(T1[,] matrix, Func<int, int, T1, T2> operation)
-        {
-            int width = matrix.GetLength(0);
-            int height = matrix.GetLength(1);
-            T2[,] newMatrix = new T2[width, height];
-
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    newMatrix[x, y] = operation(x, y, matrix[x, y]);
-
-            return newMatrix;
-        }
-
-        private static void IterateOverMatrix<T>(T[,] matrix, Action<int, int, T> operation)
-        {
-            int width = matrix.GetLength(0);
-            int height = matrix.GetLength(1);
-
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    operation(x, y, matrix[x, y]);
-        }
-
-        private static Bitmap MatrixToBitmap(double[,] array, double minValue, double maxValue)
-        {
-            int width = array.GetLength(0);
-            int height = array.GetLength(1);
-            Bitmap bitmap = new Bitmap(width, height);
-
-            double diff = maxValue - minValue;
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    bitmap.SetPixel(x, y, Color.FromArgb(
-                        (int)((array[x, y] - minValue) / diff * channelSize),
-                        (int)((array[x, y] - minValue) / diff * channelSize),
-                        (int)((array[x, y] - minValue) / diff * channelSize)
-                    ));
-
-            return bitmap;
-        }
-
-        private static double GetMaxMagnitude(int channels, Kernel2d krnl)
-        {
-            double posXAmpl = 0, negXAmpl = 0, posYAmpl = 0, negYAmpl = 0;
-            IterateOverMatrix<double>(krnl.X, (x, y, value) =>
+            double negativeSum = 0, positiveSum = 0, minAbsElement = matrix[0, 0];
+            Matrix.ForEach(matrix, (value, x, y) =>
             {
                 if (value > 0)
-                    posXAmpl += value;
+                    positiveSum += value;
                 else
-                    negXAmpl += value;
-            });
-            IterateOverMatrix<double>(krnl.Y, (x, y, value) =>
-            {
-                if (value > 0)
-                    posYAmpl += value;
-                else
-                    negYAmpl += value;
+                    negativeSum += value;
             });
 
-            double maxDerivative = channelSize * Math.Max(Math.Max(posXAmpl, negXAmpl), Math.Max(posYAmpl, negYAmpl));
-
-            return Math.Sqrt(2 * maxDerivative * maxDerivative * channels * channels);
-        }
-
-        private static (double, double) GetValueInterval(int channels, Kernel krnl)
-        {
-            double posValue = 0, negValue = 0;
-            IterateOverMatrix<double>(krnl.X, (x, y, value) =>
-            {
-                if (value > 0)
-                    posValue += value;
-                else
-                    negValue += value;
-            });
-
-            return (negValue * channels * channelSize, posValue * channels * channelSize);
+            return (maxValue * negativeSum, maxValue * positiveSum);
         }
     }
 }
