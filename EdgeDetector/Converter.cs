@@ -202,41 +202,5 @@ namespace EdgeDetector
 
             return (maxValue * negativeSum, maxValue * positiveSum);
         }
-
-        public static int[,] FindZeroCrossings(double[,] matrix, int threshold)
-        {
-            int width = matrix.GetLength(0);
-            int height = matrix.GetLength(1);
-
-            int[,] result = new int[width - 1, height - 1];
-            for (int y = 1; y < height - 1; y++)
-                for (int x = 1; x < width - 1; x++)
-                    if (matrix[x, y] > 0)
-                        result[x - 1, y - 1] = CHANNEL_SIZE;
-                    else
-                        result[x - 1, y - 1] = 0;
-
-            return result;
-        }
-
-        public static bool IsZeroCrossing(double[,] matrix, int threshold, int x, int y)
-        {
-            //bool pair1 = ((matrix[x - 1, y - 1] < 0) ^ (matrix[x + 1, y + 1] < 0)) && matrix[x - 1, y - 1] > threshold && matrix[x + 1, y + 1] > threshold;
-            //bool pair2 = ((matrix[x, y - 1] < 0) ^ (matrix[x, y + 1] < 0)) && matrix[x, y - 1] > threshold && matrix[x, y + 1] > threshold;
-            //bool pair3 = ((matrix[x + 1, y - 1] < 0) ^ (matrix[x - 1, y + 1] < 0)) && matrix[x + 1, y - 1] > threshold && matrix[x - 1, y + 1] > threshold;
-            //bool pair4 = ((matrix[x - 1, y] < 0) ^ (matrix[x + 1, y] < 0)) && matrix[x - 1, y] > threshold && matrix[x + 1, y] > threshold;
-
-            bool pair1t = matrix[x - 1, y - 1] > threshold && matrix[x + 1, y + 1] > threshold;
-            bool pair2t = matrix[x, y - 1] > threshold && matrix[x, y + 1] > threshold;
-            bool pair3t = matrix[x + 1, y - 1] > threshold && matrix[x - 1, y + 1] > threshold;
-            bool pair4t = matrix[x - 1, y] > threshold && matrix[x + 1, y] > threshold;
-
-            bool pair1s = ((matrix[x - 1, y - 1] < 0) ^ (matrix[x + 1, y + 1] < 0));
-            bool pair2s = ((matrix[x, y - 1] < 0) ^ (matrix[x, y + 1] < 0));
-            bool pair3s = ((matrix[x + 1, y - 1] < 0) ^ (matrix[x - 1, y + 1] < 0));
-            bool pair4s = ((matrix[x - 1, y] < 0) ^ (matrix[x + 1, y] < 0));
-
-            return (pair1t && pair1s) || (pair2t && pair2s) || (pair3t && pair3s) || (pair4t && pair4s);
-        }
     }
 }
