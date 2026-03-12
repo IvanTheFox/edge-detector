@@ -14,9 +14,7 @@ namespace EdgeDetector
 
         public enum Kernels
         {
-            Zeros = 1,
-            Laplacian = 2,
-            Blur3x3 = 3
+            Laplacian = 1,
         }
 
         public Kernel()
@@ -56,9 +54,20 @@ namespace EdgeDetector
             }
         }
 
-        public static Kernel Zeros => new Kernel(Kernels.Zeros);
         public static Kernel Laplacian => new Kernel(Kernels.Laplacian);
-        public static Kernel Blur3x3 => new Kernel(Kernels.Blur3x3);
+
+        public static Kernel Gaussian(int deviation)
+        {
+            int size = (int)(2 * Math.PI * deviation);
+            int variance = deviation * deviation;
+
+            double[,] matrix = new double[size, size];
+            Matrix.ForEach(matrix, (value, x, y) =>
+                matrix[x, y] = Math.Pow(Math.E, -0.5 * (x * x + y *y) / variance) / 2 / Math.PI / variance );
+
+            Kernel krnl = new Kernel($"Gaussian({deviation})", matrix);
+            return krnl;
+        }
     }
     
     internal class Kernel2d : Kernel
