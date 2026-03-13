@@ -32,6 +32,17 @@ namespace EdgeDetector
             GradientKernelSelection.Text = Kernel2d.Kernels.Roberts.ToString();
         }
 
+        private void UpdateOperationTime(int? newTime)
+        {
+            TimeOutput.Invoke((MethodInvoker)delegate
+            {
+                if (newTime.HasValue)
+                    TimeOutput.Text = $"Completed in: {(double)newTime / 1000} sec";
+                else
+                    TimeOutput.Text = "Completed in: - sec";
+            });
+        }
+
         private bool CheckConversionState(bool showPopup = true)
         {
             if (_isConverting)
@@ -110,7 +121,9 @@ namespace EdgeDetector
 
                 conversionCall = () =>
                 {
+                    int startTime = Environment.TickCount;
                     _edgeMap = Converter.GetGradientEdgeMap(_image, krnl, threshold);
+                    UpdateOperationTime(Environment.TickCount - startTime);
                     EdgeMapDisplay.Image = _edgeMap;
                     _isConverting = false;
                 };
@@ -127,7 +140,9 @@ namespace EdgeDetector
 
                 conversionCall = () =>
                 {
+                    int startTime = Environment.TickCount;
                     _edgeMap = Converter.GetLaplacianEdgeMap(_image, threshold, gaussianDeviation);
+                    UpdateOperationTime(Environment.TickCount - startTime);
                     EdgeMapDisplay.Image = _edgeMap;
                     _isConverting = false;
                 };

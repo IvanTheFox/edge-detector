@@ -51,6 +51,7 @@
             this.EdgeMapDisplay = new System.Windows.Forms.PictureBox();
             this.ThresholdCheckBox2 = new System.Windows.Forms.CheckBox();
             this.ThresholdValueInput2 = new System.Windows.Forms.NumericUpDown();
+            this.TimeOutput = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.ImageDisplay)).BeginInit();
             this.panel1.SuspendLayout();
             this.GradientOperatorPanel.SuspendLayout();
@@ -384,12 +385,24 @@
             0,
             0});
             // 
+            // TimeOutput
+            // 
+            this.TimeOutput.AutoSize = true;
+            this.TimeOutput.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TimeOutput.ForeColor = System.Drawing.Color.Gray;
+            this.TimeOutput.Location = new System.Drawing.Point(12, 537);
+            this.TimeOutput.Name = "TimeOutput";
+            this.TimeOutput.Size = new System.Drawing.Size(175, 22);
+            this.TimeOutput.TabIndex = 14;
+            this.TimeOutput.Text = "Completed in: - sec";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(1064, 878);
+            this.Controls.Add(this.TimeOutput);
             this.Controls.Add(this.EdgeMapDisplay);
             this.Controls.Add(this.LaplacianOperatorPanel);
             this.Controls.Add(this.GradientOperatorPanel);
@@ -415,6 +428,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.EdgeMapDisplay)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput2)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -442,6 +456,7 @@
         private System.Windows.Forms.NumericUpDown SmootheningInput2;
         private System.Windows.Forms.CheckBox ThresholdCheckBox2;
         private System.Windows.Forms.NumericUpDown ThresholdValueInput2;
+        private System.Windows.Forms.Label TimeOutput;
     }
 }
 
