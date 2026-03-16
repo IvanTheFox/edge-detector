@@ -46,21 +46,24 @@
             this.label3 = new System.Windows.Forms.Label();
             this.GradientKernelSelection = new System.Windows.Forms.ComboBox();
             this.LaplacianOperatorPanel = new System.Windows.Forms.Panel();
+            this.ThresholdCheckBox2 = new System.Windows.Forms.CheckBox();
+            this.ThresholdValueInput2 = new System.Windows.Forms.NumericUpDown();
             this.SmootheningCheckBox2 = new System.Windows.Forms.CheckBox();
             this.SmootheningInput2 = new System.Windows.Forms.NumericUpDown();
             this.EdgeMapDisplay = new System.Windows.Forms.PictureBox();
-            this.ThresholdCheckBox2 = new System.Windows.Forms.CheckBox();
-            this.ThresholdValueInput2 = new System.Windows.Forms.NumericUpDown();
-            this.TimeOutput = new System.Windows.Forms.Label();
+            this.CompletionTimeInfo = new System.Windows.Forms.Label();
+            this.ImageSizeInfo = new System.Windows.Forms.Label();
+            this.OutputSizeInfo = new System.Windows.Forms.Label();
+            this.OperatorSizeInfo = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.ImageDisplay)).BeginInit();
             this.panel1.SuspendLayout();
             this.GradientOperatorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SmootheningInput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput1)).BeginInit();
             this.LaplacianOperatorPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SmootheningInput2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.EdgeMapDisplay)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput2)).BeginInit();
             this.SuspendLayout();
             // 
             // SelectImageButton
@@ -299,6 +302,41 @@
             this.LaplacianOperatorPanel.TabIndex = 12;
             this.LaplacianOperatorPanel.Visible = false;
             // 
+            // ThresholdCheckBox2
+            // 
+            this.ThresholdCheckBox2.AutoSize = true;
+            this.ThresholdCheckBox2.Checked = true;
+            this.ThresholdCheckBox2.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ThresholdCheckBox2.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ThresholdCheckBox2.ForeColor = System.Drawing.Color.White;
+            this.ThresholdCheckBox2.Location = new System.Drawing.Point(3, 14);
+            this.ThresholdCheckBox2.Name = "ThresholdCheckBox2";
+            this.ThresholdCheckBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.ThresholdCheckBox2.Size = new System.Drawing.Size(114, 26);
+            this.ThresholdCheckBox2.TabIndex = 15;
+            this.ThresholdCheckBox2.Text = "Threshold";
+            this.ThresholdCheckBox2.UseVisualStyleBackColor = true;
+            // 
+            // ThresholdValueInput2
+            // 
+            this.ThresholdValueInput2.BackColor = System.Drawing.Color.Black;
+            this.ThresholdValueInput2.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ThresholdValueInput2.ForeColor = System.Drawing.Color.White;
+            this.ThresholdValueInput2.Location = new System.Drawing.Point(168, 14);
+            this.ThresholdValueInput2.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.ThresholdValueInput2.Name = "ThresholdValueInput2";
+            this.ThresholdValueInput2.Size = new System.Drawing.Size(133, 29);
+            this.ThresholdValueInput2.TabIndex = 14;
+            this.ThresholdValueInput2.Value = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            // 
             // SmootheningCheckBox2
             // 
             this.SmootheningCheckBox2.AutoSize = true;
@@ -350,51 +388,49 @@
             this.EdgeMapDisplay.TabIndex = 13;
             this.EdgeMapDisplay.TabStop = false;
             // 
-            // ThresholdCheckBox2
+            // CompletionTimeInfo
             // 
-            this.ThresholdCheckBox2.AutoSize = true;
-            this.ThresholdCheckBox2.Checked = true;
-            this.ThresholdCheckBox2.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ThresholdCheckBox2.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ThresholdCheckBox2.ForeColor = System.Drawing.Color.White;
-            this.ThresholdCheckBox2.Location = new System.Drawing.Point(3, 14);
-            this.ThresholdCheckBox2.Name = "ThresholdCheckBox2";
-            this.ThresholdCheckBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.ThresholdCheckBox2.Size = new System.Drawing.Size(114, 26);
-            this.ThresholdCheckBox2.TabIndex = 15;
-            this.ThresholdCheckBox2.Text = "Threshold";
-            this.ThresholdCheckBox2.UseVisualStyleBackColor = true;
+            this.CompletionTimeInfo.AutoSize = true;
+            this.CompletionTimeInfo.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.CompletionTimeInfo.ForeColor = System.Drawing.Color.Gray;
+            this.CompletionTimeInfo.Location = new System.Drawing.Point(12, 537);
+            this.CompletionTimeInfo.Name = "CompletionTimeInfo";
+            this.CompletionTimeInfo.Size = new System.Drawing.Size(175, 22);
+            this.CompletionTimeInfo.TabIndex = 14;
+            this.CompletionTimeInfo.Text = "Completed in: - sec";
             // 
-            // ThresholdValueInput2
+            // ImageSizeInfo
             // 
-            this.ThresholdValueInput2.BackColor = System.Drawing.Color.Black;
-            this.ThresholdValueInput2.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ThresholdValueInput2.ForeColor = System.Drawing.Color.White;
-            this.ThresholdValueInput2.Location = new System.Drawing.Point(168, 14);
-            this.ThresholdValueInput2.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.ThresholdValueInput2.Name = "ThresholdValueInput2";
-            this.ThresholdValueInput2.Size = new System.Drawing.Size(133, 29);
-            this.ThresholdValueInput2.TabIndex = 14;
-            this.ThresholdValueInput2.Value = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
+            this.ImageSizeInfo.AutoSize = true;
+            this.ImageSizeInfo.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ImageSizeInfo.ForeColor = System.Drawing.Color.Gray;
+            this.ImageSizeInfo.Location = new System.Drawing.Point(12, 559);
+            this.ImageSizeInfo.Name = "ImageSizeInfo";
+            this.ImageSizeInfo.Size = new System.Drawing.Size(134, 22);
+            this.ImageSizeInfo.TabIndex = 15;
+            this.ImageSizeInfo.Text = "Image size: -x-";
             // 
-            // TimeOutput
+            // OutputSizeInfo
             // 
-            this.TimeOutput.AutoSize = true;
-            this.TimeOutput.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TimeOutput.ForeColor = System.Drawing.Color.Gray;
-            this.TimeOutput.Location = new System.Drawing.Point(12, 537);
-            this.TimeOutput.Name = "TimeOutput";
-            this.TimeOutput.Size = new System.Drawing.Size(175, 22);
-            this.TimeOutput.TabIndex = 14;
-            this.TimeOutput.Text = "Completed in: - sec";
+            this.OutputSizeInfo.AutoSize = true;
+            this.OutputSizeInfo.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OutputSizeInfo.ForeColor = System.Drawing.Color.Gray;
+            this.OutputSizeInfo.Location = new System.Drawing.Point(12, 581);
+            this.OutputSizeInfo.Name = "OutputSizeInfo";
+            this.OutputSizeInfo.Size = new System.Drawing.Size(136, 22);
+            this.OutputSizeInfo.TabIndex = 16;
+            this.OutputSizeInfo.Text = "Output size: -x-";
+            // 
+            // OperatorSizeInfo
+            // 
+            this.OperatorSizeInfo.AutoSize = true;
+            this.OperatorSizeInfo.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OperatorSizeInfo.ForeColor = System.Drawing.Color.Gray;
+            this.OperatorSizeInfo.Location = new System.Drawing.Point(12, 603);
+            this.OperatorSizeInfo.Name = "OperatorSizeInfo";
+            this.OperatorSizeInfo.Size = new System.Drawing.Size(129, 22);
+            this.OperatorSizeInfo.TabIndex = 17;
+            this.OperatorSizeInfo.Text = "Operator size:";
             // 
             // Form1
             // 
@@ -402,7 +438,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(1064, 878);
-            this.Controls.Add(this.TimeOutput);
+            this.Controls.Add(this.OperatorSizeInfo);
+            this.Controls.Add(this.OutputSizeInfo);
+            this.Controls.Add(this.ImageSizeInfo);
+            this.Controls.Add(this.CompletionTimeInfo);
             this.Controls.Add(this.EdgeMapDisplay);
             this.Controls.Add(this.LaplacianOperatorPanel);
             this.Controls.Add(this.GradientOperatorPanel);
@@ -424,9 +463,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput1)).EndInit();
             this.LaplacianOperatorPanel.ResumeLayout(false);
             this.LaplacianOperatorPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.SmootheningInput2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.EdgeMapDisplay)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ThresholdValueInput2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -456,7 +495,10 @@
         private System.Windows.Forms.NumericUpDown SmootheningInput2;
         private System.Windows.Forms.CheckBox ThresholdCheckBox2;
         private System.Windows.Forms.NumericUpDown ThresholdValueInput2;
-        private System.Windows.Forms.Label TimeOutput;
+        private System.Windows.Forms.Label CompletionTimeInfo;
+        private System.Windows.Forms.Label ImageSizeInfo;
+        private System.Windows.Forms.Label OutputSizeInfo;
+        private System.Windows.Forms.Label OperatorSizeInfo;
     }
 }
 

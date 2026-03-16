@@ -32,22 +32,50 @@ namespace EdgeDetector
             GradientKernelSelection.Text = Kernel2d.Kernels.Roberts.ToString();
         }
 
-        private void UpdateOperationTime(int? newTime)
+        private void UpdateTimeInfo(int? newTime)
         {
-            TimeOutput.Invoke((MethodInvoker)delegate
+            CompletionTimeInfo.Invoke((MethodInvoker)delegate
             {
                 if (newTime.HasValue)
-                    TimeOutput.Text = $"Completed in: {(double)newTime / 1000} sec";
+                    CompletionTimeInfo.Text = $"Completed in: {(double)newTime / 1000} sec";
                 else
-                    TimeOutput.Text = "Completed in: - sec";
+                    CompletionTimeInfo.Text = "Completed in: - sec";
             });
+        }
+
+        private void UpdateImageSizeInfo(int? width = null, int? height = null)
+        {
+            if (!width.HasValue || !height.HasValue)
+                ImageSizeInfo.Text = "Image size: -x-";
+            else
+                ImageSizeInfo.Text = $"Image size: {width.Value}x{height.Value}";
+        }
+
+        private void UpdateOutputSizeInfo(int? width = null, int? height = null)
+        {
+            CompletionTimeInfo.Invoke((MethodInvoker)delegate
+            {
+                if (!width.HasValue || !height.HasValue)
+                    OutputSizeInfo.Text = "Output size: -x-";
+                else
+                    OutputSizeInfo.Text = $"Output size: {width.Value}x{height.Value}";
+            });
+        }
+
+        private void UpdateOperatorSizeInfo(int? width = null, int? height = null)
+        {
+            if (!width.HasValue || !height.HasValue)
+                OperatorSizeInfo.Text = "Image size: -x-";
+            else
+                OperatorSizeInfo.Text = $"Operator size: {width.Value}x{height.Value}";
         }
 
         private bool CheckConversionState(bool showPopup = true)
         {
+            bool temp = _isConverting;
             if (_isConverting)
                 MessageBox.Show("Conversion is in progress. Please wait.", "Program is busy");
-            return _isConverting;
+            return temp;
         }
 
         private void SelectImageButton_Click(object sender, EventArgs e)
@@ -64,6 +92,9 @@ namespace EdgeDetector
                 _image = FileManager.ImagePathToBitmap(OpenImageDialog.FileName);
                 ImageDisplay.Image = _image;
                 EdgeMapDisplay.Image = null;
+
+                UpdateImageSizeInfo(_image.Width, _image.Height);
+                UpdateOutputSizeInfo();
             }
         }
 
@@ -112,8 +143,11 @@ namespace EdgeDetector
                     int deviation = (int)SmootheningInput1.Value;
                     Kernel gaussian = Kernel.Gaussian(deviation);
                     krnl.X = Converter.Convolve(krnl.X, gaussian.X);
-                    krnl.X = Converter.Convolve(krnl.Y, gaussian.X);
+                    krnl.Y = Converter.Convolve(krnl.Y, gaussian.X);
+                    krnl.Size = krnl.X.GetLength(0);
                 }
+
+                UpdateOperatorSizeInfo(krnl.Size, krnl.Size);
 
                 int? threshold = null;
                 if (ThresholdCheckBox1.Checked)
@@ -123,16 +157,26 @@ namespace EdgeDetector
                 {
                     int startTime = Environment.TickCount;
                     _edgeMap = Converter.GetGradientEdgeMap(_image, krnl, threshold);
-                    UpdateOperationTime(Environment.TickCount - startTime);
+                    UpdateTimeInfo(Environment.TickCount - startTime);
+                    UpdateOutputSizeInfo(_edgeMap.Width, _edgeMap.Height);
                     EdgeMapDisplay.Image = _edgeMap;
                     _isConverting = false;
                 };
             }
             else
             {
+                Kernel krnl = Kernel.Laplacian;
+
                 int? gaussianDeviation = null;
                 if (SmootheningCheckBox2.Checked)
+                {
                     gaussianDeviation = (int)SmootheningInput2.Value;
+                    Kernel gaussian = Kernel.Gaussian(gaussianDeviation.Value);
+                    krnl.X = Converter.Convolve(krnl.X, gaussian.X);
+                    krnl.Size = krnl.X.GetLength(0);
+                }
+
+                UpdateOperatorSizeInfo(krnl.Size, krnl.Size);
 
                 int? threshold = null;
                 if (ThresholdCheckBox2.Checked)
@@ -142,7 +186,8 @@ namespace EdgeDetector
                 {
                     int startTime = Environment.TickCount;
                     _edgeMap = Converter.GetLaplacianEdgeMap(_image, threshold, gaussianDeviation);
-                    UpdateOperationTime(Environment.TickCount - startTime);
+                    UpdateTimeInfo(Environment.TickCount - startTime);
+                    UpdateOutputSizeInfo(_edgeMap.Width, _edgeMap.Height);
                     EdgeMapDisplay.Image = _edgeMap;
                     _isConverting = false;
                 };
