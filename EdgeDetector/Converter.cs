@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,19 +45,21 @@ namespace EdgeDetector
             // Calculating magnitude of change
             double[,] dx = Matrix.NewMatrix(redX,
                 (value, x, y) => value + greenX[x, y] + blueX[x, y]);
-            double[,] dy = Matrix.NewMatrix(redX,
-                (value, x, y) => value + greenX[x, y] + blueX[x, y]);
+            double[,] dy = Matrix.NewMatrix(redY,
+                (value, x, y) => value + greenY[x, y] + blueY[x, y]);
 
             double[,] magnitude = Matrix.NewMatrix(redX,
                 (value, x, y) => Math.Sqrt(dx[x, y] * dx[x, y] + dy[x, y] * dy[x, y]));
 
             // Mapping values to color channel size
-            (double _, double maxDx) = GetConvolutionExtremes(255, krnl.X);
-            (double _, double maxDy) = GetConvolutionExtremes(255, krnl.Y);
+            (double minDx, double maxDx) = GetConvolutionExtremes(255, krnl.X);
+            (double minDy, double maxDy) = GetConvolutionExtremes(255, krnl.Y);
             double maxD = Math.Max(maxDx, maxDy);
             double maxMagnitude = Math.Sqrt(2 * maxD * maxD * 3 * 3);
 
             Matrix.Map(magnitude, 0, maxMagnitude, 0, 255);
+            Matrix.Map(dx, minDy * 3, maxDx * 3, 0, 255);
+            Matrix.Map(dy, minDy * 3, maxDy * 3, 0, 255);
 
             // Applying threshold if neccessary
             if (threshold.HasValue)
@@ -64,15 +67,19 @@ namespace EdgeDetector
                 Matrix.ForEach(magnitude, (value, x, y) =>
                 {
                     if (value < threshold)
-                        magnitude[x, y] = 0;
-                    else
-                        magnitude[x, y] = 255;
+                    {
+                        dx[x, y] = 0;
+                        dy[x, y] = 0;
+                    }
                 });
             }
 
             // Converting matrix to a Bitmap
             int[,] magnitudeInt = Matrix.NewMatrix(magnitude, (value, x, y) => (int)value);
-            Bitmap edgeMap = MatrixToBitmap(magnitudeInt);
+            int[,] dxInt = Matrix.NewMatrix(dx, (value, x, y) => (int)value);
+            int[,] dyInt = Matrix.NewMatrix(dy, (value, x, y) => (int)value);
+            
+            Bitmap edgeMap = MatrixToBitmap(dxInt, new int[dx.GetLength(0), dx.GetLength(1)], dyInt);
 
             return edgeMap;
         }
@@ -156,6 +163,18 @@ namespace EdgeDetector
 
             return bitmap;
         }
+        public static Bitmap MatrixToBitmap(int[,] r, int[,] g, int[,] b)
+        {
+            int width = r.GetLength(0);
+            int height = r.GetLength(1);
+            Bitmap bitmap = new Bitmap(width, height);
+
+            Matrix.ForEach(r, (value, x, y) => {
+                bitmap.SetPixel(x, y, Color.FromArgb(r[x, y], g[x, y], b[x, y]));
+                });
+
+            return bitmap;
+        }
 
         // Mathematical operations
         public static double[,] Convolve(double[,] m1, double[,] m2)
@@ -191,7 +210,7 @@ namespace EdgeDetector
 
         public static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
         {
-            double negativeSum = 0, positiveSum = 0, minAbsElement = matrix[0, 0];
+            double negativeSum = 0, positiveSum = 0;
             Matrix.ForEach(matrix, (value, x, y) =>
             {
                 if (value > 0)

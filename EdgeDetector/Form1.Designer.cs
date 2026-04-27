@@ -122,7 +122,7 @@
             // OpenImageDialog
             // 
             this.OpenImageDialog.FileName = "openFileDialog1";
-            this.OpenImageDialog.Filter = "Image files (*.png)|*.png";
+            this.OpenImageDialog.Filter = "All image types (*.png; *.jpg)|*.png; *.jpg";
             this.OpenImageDialog.RestoreDirectory = true;
             // 
             // SaveImageDialog
@@ -437,7 +437,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(1064, 878);
+            this.ClientSize = new System.Drawing.Size(1064, 845);
             this.Controls.Add(this.OperatorSizeInfo);
             this.Controls.Add(this.OutputSizeInfo);
             this.Controls.Add(this.ImageSizeInfo);
