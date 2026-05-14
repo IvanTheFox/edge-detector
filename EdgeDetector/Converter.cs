@@ -9,17 +9,24 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace EdgeDetector
 {
+    /// <summary>
+    /// Функциональный класс-конвертер изображений в контурнуые карты
+    /// </summary>
     internal class Converter
     {
         public const int CHANNEL_SIZE = 255;
 
-        // Edge map generators
+        /// <summary>
+        /// Конвертирует изображение (Bitmap) в контурную карту градиентным методом.
+        /// </summary>
+        /// <param name="image">Исходное изображение</param>
+        /// <param name="krnl">Градиентный оператор</param>
+        /// <param name="threshold">Пороговое значение</param>
+        /// <returns>Контурная карта</returns>
         public static Bitmap GetGradientEdgeMap(Bitmap image, Kernel2d krnl, int? threshold = null)
         {
-            // Splitting the image into 3 int matrices of red, green and blue values
             (int[,] redInt, int[,] greenInt, int[,] blueInt) = GetChannels(image);
 
-            // Converting int matrices to double matrices
             double[,] red = Matrix.NewMatrix(redInt,
                 (value, x, y) => (double)value);
             double[,] green = Matrix.NewMatrix(greenInt,
@@ -27,7 +34,6 @@ namespace EdgeDetector
             double[,] blue = Matrix.NewMatrix(blueInt,
                 (value, x, y) => (double)value);
 
-            // Convolving channel matrices with X and Y variations of the kernel
             double[,] redX = Matrix.NewMatrix(Convolve(red, krnl.X),
                 (value, x, y) => Math.Abs(value));
             double[,] greenX = Matrix.NewMatrix(Convolve(green, krnl.X),
@@ -42,7 +48,6 @@ namespace EdgeDetector
             double[,] blueY = Matrix.NewMatrix(Convolve(blue, krnl.Y),
                 (value, x, y) => Math.Abs(value));
 
-            // Calculating magnitude of change
             double[,] dx = Matrix.NewMatrix(redX,
                 (value, x, y) => value + greenX[x, y] + blueX[x, y]);
             double[,] dy = Matrix.NewMatrix(redY,
@@ -51,7 +56,6 @@ namespace EdgeDetector
             double[,] magnitude = Matrix.NewMatrix(redX,
                 (value, x, y) => Math.Sqrt(dx[x, y] * dx[x, y] + dy[x, y] * dy[x, y]));
 
-            // Mapping values to color channel size
             (double minDx, double maxDx) = GetConvolutionExtremes(255, krnl.X);
             (double minDy, double maxDy) = GetConvolutionExtremes(255, krnl.Y);
             double maxD = Math.Max(maxDx, maxDy);
@@ -61,7 +65,6 @@ namespace EdgeDetector
             Matrix.Map(dx, minDy * 3, maxDx * 3, 0, 255);
             Matrix.Map(dy, minDy * 3, maxDy * 3, 0, 255);
 
-            // Applying threshold if neccessary
             if (threshold.HasValue)
             {
                 Matrix.ForEach(magnitude, (value, x, y) =>
@@ -74,7 +77,6 @@ namespace EdgeDetector
                 });
             }
 
-            // Converting matrix to a Bitmap
             int[,] magnitudeInt = Matrix.NewMatrix(magnitude, (value, x, y) => (int)value);
             int[,] dxInt = Matrix.NewMatrix(dx, (value, x, y) => (int)value);
             int[,] dyInt = Matrix.NewMatrix(dy, (value, x, y) => (int)value);
@@ -84,6 +86,13 @@ namespace EdgeDetector
             return edgeMap;
         }
 
+        /// <summary>
+        /// Конвертирует изображение (Bitmap) в контурную карту методом Лапласа.
+        /// </summary>
+        /// <param name="image">Исходное изображение</param>
+        /// <param name="threshold">Пороговое значение</param>
+        /// <param name="gaussianDeviation">Степень сглаживания</param>
+        /// <returns>Контурная карта</returns>
         public static Bitmap GetLaplacianEdgeMap(Bitmap image, int? threshold = null, int ? gaussianDeviation = null)
         {   
             Kernel krnl = Kernel.Laplacian;
@@ -128,8 +137,12 @@ namespace EdgeDetector
             return edgeMap;
         }
 
-        // Image operations
-        public static (int[,], int[,], int[,]) GetChannels(Bitmap map)
+        /// <summary>
+        /// Разделяет изображение по 3 каналам: красный, зелёный, синий.
+        /// </summary>
+        /// <param name="map">Изображение</param>
+        /// <returns>Отделённые каналы (r, g, b)</returns>
+        private static (int[,], int[,], int[,]) GetChannels(Bitmap map)
         {
             int width = map.Width;
             int height = map.Height;
@@ -152,7 +165,12 @@ namespace EdgeDetector
             return (red, green, blue);
         }
 
-        public static Bitmap MatrixToBitmap(int[,] matrix)
+        /// <summary>
+        /// Преобразует матрицу в Bitmap
+        /// </summary>
+        /// <param name="matrix">Матрица</param>
+        /// <returns>Bitmap</returns>
+        private static Bitmap MatrixToBitmap(int[,] matrix)
         {
             int width = matrix.GetLength(0);
             int height = matrix.GetLength(1);
@@ -163,7 +181,15 @@ namespace EdgeDetector
 
             return bitmap;
         }
-        public static Bitmap MatrixToBitmap(int[,] r, int[,] g, int[,] b)
+
+        /// <summary>
+        /// Преобразует 3 двумерных массива, соответствующие каналам изображения, в Bitmap
+        /// </summary>
+        /// <param name="r">Красный канал</param>
+        /// <param name="g">Зелёный канал</param>
+        /// <param name="b">Синий канал</param>
+        /// <returns>Bitmap</returns>
+        private static Bitmap MatrixToBitmap(int[,] r, int[,] g, int[,] b)
         {
             int width = r.GetLength(0);
             int height = r.GetLength(1);
@@ -176,7 +202,12 @@ namespace EdgeDetector
             return bitmap;
         }
 
-        // Mathematical operations
+        /// <summary>
+        /// Свёртывает 2 матрицы.
+        /// </summary>
+        /// <param name="m1">Матрица 1</param>
+        /// <param name="m2">Матрица 2</param>
+        /// <returns>Новая матрица</returns>
         public static double[,] Convolve(double[,] m1, double[,] m2)
         {
             int width1 = m1.GetLength(0);
@@ -208,7 +239,13 @@ namespace EdgeDetector
             return result;
         }
 
-        public static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
+        /// <summary>
+        /// Вычисляет предельные значения операции свёртки.
+        /// </summary>
+        /// <param name="maxValue">Максимальное значение матрицы</param>
+        /// <param name="matrix">Ядро свёртки</param>
+        /// <returns>Минимальное и максимальное значение результата свёртки</returns>
+        private static (double, double) GetConvolutionExtremes(double maxValue, double[,] matrix)
         {
             double negativeSum = 0, positiveSum = 0;
             Matrix.ForEach(matrix, (value, x, y) =>

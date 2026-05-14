@@ -10,16 +10,25 @@ using System.Windows.Forms;
 
 namespace EdgeDetector
 {
-    public partial class Form1 : Form
+    /// <summary>
+    /// Класс, представляющий форму приложения Edge Detector
+    /// </summary>
+    public partial class EdgeDetectorForm : Form
     {
         Bitmap _image = null;
         Bitmap _edgeMap = null;
 
         bool _isConverting = false;
 
-        public Form1()
+        /// <summary>
+        /// Создаёт форму.
+        /// </summary>
+        public EdgeDetectorForm()
         {
             InitializeComponent();
+
+            // Hello message
+            MessageBox.Show("Автор: Шепелев И.М. 24ВП1\nДетектор контуров изображения", "Приветствие");
 
             // Hiding some panels
             LaplacianOperatorPanel.Location = GradientOperatorPanel.Location;
@@ -32,6 +41,10 @@ namespace EdgeDetector
             GradientKernelSelection.Text = Kernel2d.Kernels.Roberts.ToString();
         }
 
+        /// <summary>
+        /// Обновляет отображаемое время операции обработки.
+        /// </summary>
+        /// <param name="newTime">Новое время</param>
         private void UpdateTimeInfo(int? newTime)
         {
             CompletionTimeInfo.Invoke((MethodInvoker)delegate
@@ -43,6 +56,11 @@ namespace EdgeDetector
             });
         }
 
+        /// <summary>
+        /// Обновляет отображаемую информацию о размере исходного изображения.
+        /// </summary>
+        /// <param name="width">Ширина изображения</param>
+        /// <param name="height">Высота изображения</param>
         private void UpdateImageSizeInfo(int? width = null, int? height = null)
         {
             if (!width.HasValue || !height.HasValue)
@@ -51,6 +69,11 @@ namespace EdgeDetector
                 ImageSizeInfo.Text = $"Image size: {width.Value}x{height.Value}";
         }
 
+        /// <summary>
+        /// Обновляет отображаемую информацию о размере итогового изображения.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void UpdateOutputSizeInfo(int? width = null, int? height = null)
         {
             CompletionTimeInfo.Invoke((MethodInvoker)delegate
@@ -62,6 +85,11 @@ namespace EdgeDetector
             });
         }
 
+        /// <summary>
+        /// Обновляет отображаемую информацию о размере оператора.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void UpdateOperatorSizeInfo(int? width = null, int? height = null)
         {
             if (!width.HasValue || !height.HasValue)
@@ -70,6 +98,11 @@ namespace EdgeDetector
                 OperatorSizeInfo.Text = $"Operator size: {width.Value}x{height.Value}";
         }
 
+        /// <summary>
+        /// Проверят, производится ли в данный момент обработка изображения.
+        /// </summary>
+        /// <param name="showPopup">Показать ли окно с предупреждением</param>
+        /// <returns>Производится ли операция</returns>
         private bool CheckConversionState(bool showPopup = true)
         {
             bool temp = _isConverting;
@@ -78,6 +111,11 @@ namespace EdgeDetector
             return temp;
         }
 
+        /// <summary>
+        /// Обработка нажатия на кнопку выбора изображения.
+        /// </summary>
+        /// <param name="sender">Отправитель события</param>
+        /// <param name="e">Аргументы события</param>
         private void SelectImageButton_Click(object sender, EventArgs e)
         {
             if (CheckConversionState())
@@ -98,13 +136,21 @@ namespace EdgeDetector
             }
         }
 
+        /// <summary>
+        /// Обрабатывает нажатие на кнопку сохранения изображения.
+        /// </summary>
+        /// <param name="sender">Отправитель события</param>
+        /// <param name="e">Аргументы события</param>
         private void SaveImageButton_Click(object sender, EventArgs e)
         {
             if (CheckConversionState())
                 return;
 
             if (_edgeMap == null)
+            {
+                MessageBox.Show("No edge map has been generated yet.", "No edge map error");
                 return;
+            }
             if (SaveImageDialog.InitialDirectory == "")
                 SaveImageDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
             if (SaveImageDialog.ShowDialog() == DialogResult.OK)
@@ -114,6 +160,11 @@ namespace EdgeDetector
             }
         }
 
+        /// <summary>
+        /// Обрабатывает нажатие на кнопку конвертации.
+        /// </summary>
+        /// <param name="sender">Отправитель события</param>
+        /// <param name="e">Аргументы события</param>
         private void ConvertImageButton_Click(object sender, EventArgs e)
         {
             if (CheckConversionState())
@@ -203,6 +254,11 @@ namespace EdgeDetector
             conversion.Start();
         }
 
+        /// <summary>
+        /// Обрабатывает выбор метода обнаружения контуров.
+        /// </summary>
+        /// <param name="sender">Отправитель события</param>
+        /// <param name="e">Аргументы события</param>
         private void OperatorOption1_CheckedChanged(object sender, EventArgs e)
         {
             GradientOperatorPanel.Visible = OperatorOption1.Checked;

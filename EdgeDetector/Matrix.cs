@@ -6,8 +6,17 @@ using System.Threading.Tasks;
 
 namespace EdgeDetector
 {
+    /// <summary>
+    /// Функциональный-класс с операциями над матрицами.
+    /// </summary>
     internal class Matrix
     {
+        /// <summary>
+        /// Производит операцию над каждым элементом матрицы
+        /// </summary>
+        /// <typeparam name="T">Тип данных матрицы</typeparam>
+        /// <param name="matrix">Матрица</param>
+        /// <param name="operation">Операция</param>
         public static void ForEach<T>(T[,] matrix, Action<T, int, int> operation)
         {
             int width = matrix.GetLength(0);
@@ -18,6 +27,14 @@ namespace EdgeDetector
                     operation(matrix[x, y], x, y);
         }
 
+        /// <summary>
+        /// Создаёт новую матрицу на основе другой.
+        /// </summary>
+        /// <typeparam name="T1">Тип данных исходной матрицы</typeparam>
+        /// <typeparam name="T2">Тип данных итоговой матрицы</typeparam>
+        /// <param name="matrix">Матрица</param>
+        /// <param name="operation">Операция</param>
+        /// <returns></returns>
         public static T2[,] NewMatrix<T1, T2>(T1[,] matrix, Func<T1, int, int, T2> operation)
         {
             int width = matrix.GetLength(0);
@@ -30,6 +47,15 @@ namespace EdgeDetector
 
             return newMatrix;
         }
+
+        /// <summary>
+        /// Приводит диапозон значений матрицы к другому диапозону
+        /// </summary>
+        /// <param name="matrix">Матрица</param>
+        /// <param name="oldMin">Старый минимум</param>
+        /// <param name="oldMax">Старый максимум</param>
+        /// <param name="newMin">Новый минимум</param>
+        /// <param name="newMax">Новый максимум</param>
         public static void Map(double[,] matrix, double oldMin, double oldMax, double newMin, double newMax)
         {
             ForEach<double>(matrix, (value, x, y) =>

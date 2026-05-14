@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace EdgeDetector
 {
+    /// <summary>
+    /// Класс, пердставляющий ядро свёртки
+    /// </summary>
     internal class Kernel
     {
         public string Name { get; set; }
@@ -17,6 +20,9 @@ namespace EdgeDetector
             Laplacian = 1
         }
 
+        /// <summary>
+        /// Создаёт ядро свёртки по умолчанию
+        /// </summary>
         public Kernel()
         {
             Name = "Zeros";
@@ -28,6 +34,11 @@ namespace EdgeDetector
             Size = X.GetLength(0);
         }
 
+        /// <summary>
+        /// Создаёт ядро свёртки
+        /// </summary>
+        /// <param name="name">Имя оператора</param>
+        /// <param name="x">Матрица оператора</param>
         public Kernel(string name, double[,] x)
         {
             Name = name;
@@ -35,6 +46,10 @@ namespace EdgeDetector
             Size = x.GetLength(0);
         }
 
+        /// <summary>
+        /// Создаёт ядро свёртки по шаблону
+        /// </summary>
+        /// <param name="krnl">Шаблон</param>
         public Kernel(Kernels krnl)
         {
             switch (krnl)
@@ -57,6 +72,11 @@ namespace EdgeDetector
 
         public static Kernel Laplacian => new Kernel(Kernels.Laplacian);
 
+        /// <summary>
+        /// Создаёт оператор Гаусса
+        /// </summary>
+        /// <param name="deviation">Степень оператора</param>
+        /// <returns>Оператор Гаусса</returns>
         public static Kernel Gaussian(int deviation)
         {
             int size = (int)(2 * Math.PI * deviation);
@@ -71,6 +91,9 @@ namespace EdgeDetector
         }
     }
     
+    /// <summary>
+    /// Класс, пердставляющий оператор с 2 ядрами свёртки
+    /// </summary>
     internal class Kernel2d : Kernel
     {
         public double[,] Y { get; set; }
@@ -83,10 +106,20 @@ namespace EdgeDetector
             Sobel5x5 = 4
         }
 
+        /// <summary>
+        /// Создаёт оператор
+        /// </summary>
+        /// <param name="name">Имя оператора</param>
+        /// <param name="x">Первое ядро свёртки</param>
+        /// <param name="y">Второе ядро свёртки</param>
         public Kernel2d(string name, double[,] x, double[,] y)
             : base(name, x)
         { Y = y; }
 
+        /// <summary>
+        /// Создаёт оператор по шаблону
+        /// </summary>
+        /// <param name="krnl">Шаблон</param>
         public Kernel2d(Kernels krnl)
         {
             switch (krnl)

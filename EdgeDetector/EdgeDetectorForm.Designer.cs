@@ -1,6 +1,6 @@
 ﻿namespace EdgeDetector
 {
-    partial class Form1
+    partial class EdgeDetectorForm
     {
         /// <summary>
         /// Required designer variable.

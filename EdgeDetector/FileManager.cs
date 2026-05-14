@@ -9,12 +9,26 @@ using System.Threading.Tasks;
 
 namespace EdgeDetector
 {
+    /// <summary>
+    /// Функциональный класс для сохранения и чтения файлов.
+    /// </summary>
     internal class FileManager
     {
+        /// <summary>
+        /// Считывает изображение по пути и конвертирует его в Bitmap
+        /// </summary>
+        /// <param name="path">Путь к изображению</param>
+        /// <returns>Bitmap</returns>
         public static Bitmap ImagePathToBitmap(string path)
         {
             return new Bitmap(path);
         }
+
+        /// <summary>
+        /// Сохраняет Bitmap как файл изображения на компьютер по пути.
+        /// </summary>
+        /// <param name="bitmap">Изображение</param>
+        /// <param name="path">Путь сохранения</param>
         public static void BitmapToPath(Bitmap bitmap, string path)
         {
             using (MemoryStream memory = new MemoryStream())
